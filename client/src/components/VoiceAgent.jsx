@@ -1,3 +1,37 @@
+/**
+ * Voice Agent Component
+ * 
+ * Main React component for the restaurant booking voice interface.
+ * Provides voice-based interaction for making restaurant reservations.
+ * 
+ * Features:
+ * - Speech-to-text for user input
+ * - Text-to-speech for agent responses
+ * - Conversation state management
+ * - Weather API integration
+ * - Real-time transcription display
+ * - Error handling and retry logic (up to 3 retries)
+ * - Visual feedback (listening, speaking states)
+ * 
+ * State Management:
+ * - isActive: Whether conversation is active
+ * - isListening: Currently capturing speech
+ * - isSpeaking: Agent is speaking
+ * - transcript: Current user speech text
+ * - conversation: Array of {role, message} objects
+ * - bookingConfirmed: Booking has been created
+ * - retryCount: Number of retry attempts
+ * - canContinue: User can continue to next question
+ * 
+ * Services Used:
+ * - SpeechRecognitionService: Browser speech-to-text
+ * - SpeechSynthesisService: Browser text-to-speech
+ * - ConversationFlowService: Conversation state machine
+ * - apiService: Backend API calls
+ * 
+ * @component
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import SpeechRecognitionService from '../utils/speechRecognition';
 import SpeechSynthesisService from '../utils/speechSynthesis';
@@ -93,7 +127,20 @@ const VoiceAgent = () => {
   }, []);
 
   /**
-   * Start conversation
+   * Start Conversation
+   * 
+   * Initiates the booking conversation flow.
+   * Resets all state, plays greeting, and starts listening.
+   * 
+   * Flow:
+   * 1. Reset all states (active, conversation, retry count)
+   * 2. Reset conversation flow service
+   * 3. Get and speak greeting message
+   * 4. Wait for speech to complete (800ms delay)
+   * 5. Start listening for user input
+   * 
+   * @async
+   * @function startConversation
    */
   const startConversation = async () => {
     setIsActive(true);
@@ -103,17 +150,19 @@ const VoiceAgent = () => {
     setRetryCount(0);
     conversationFlowRef.current.reset();
 
-    // Greet user
+    // Get greeting from conversation flow
     const greeting = conversationFlowRef.current.getPrompt();
     addMessage('agent', greeting);
     await speak(greeting);
 
-    // Wait a bit for speech to complete
+    // Wait for speech synthesis to complete
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Start listening after greeting
+    // Start listening for user response
     startListening();
-  };  /**
+  };
+
+  /**
    * Stop conversation
    */
   const stopConversation = () => {

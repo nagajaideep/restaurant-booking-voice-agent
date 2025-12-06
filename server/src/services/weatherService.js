@@ -1,13 +1,50 @@
+/**
+ * Weather Service
+ * 
+ * Integrates with OpenWeatherMap API to fetch weather forecasts.
+ * Handles both current weather and 5-day forecast data.
+ * 
+ * API Documentation: https://openweathermap.org/api
+ * 
+ * Features:
+ * - Current weather for any location
+ * - 5-day forecast (3-hour intervals)
+ * - Automatic date calculation (days until booking)
+ * - Fallback to current weather for distant dates
+ * - Complete API response logging for debugging
+ * - Temperature in Celsius
+ * - Detailed weather conditions and descriptions
+ * 
+ * Environment Variables:
+ * - WEATHER_API_KEY: OpenWeatherMap API key (required)
+ * 
+ * @module services/weatherService
+ */
+
 const axios = require('axios');
 
+// OpenWeatherMap API configuration
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5';
 
 /**
- * Get weather forecast for a specific date and location
+ * Get Weather Forecast for Booking Date
+ * 
+ * Fetches weather data for a specific date and location.
+ * Uses forecast API for dates within 5 days,
+ * falls back to current weather for distant/past dates.
+ * 
+ * @async
+ * @function getWeatherForecast
  * @param {string} date - Date in YYYY-MM-DD format
- * @param {string} location - City name
- * @returns {Promise<Object>} Weather data
+ * @param {string} location - City name (e.g., 'Hyderabad', 'Mumbai')
+ * @returns {Promise<Object>} Weather data object
+ * @throws {Error} If API key is missing or API call fails
+ * 
+ * @example
+ * const weather = await getWeatherForecast('2025-12-15', 'Hyderabad');
+ * console.log(weather.temperature); // 25
+ * console.log(weather.condition);   // 'Clear'
  */
 exports.getWeatherForecast = async (date, location) => {
   try {
@@ -41,10 +78,33 @@ exports.getWeatherForecast = async (date, location) => {
 };
 
 /**
- * Get current weather
+ * Get Current Weather
+ * 
+ * Fetches current weather conditions for a location.
+ * Used as fallback for past dates or dates beyond 5-day forecast.
+ * 
+ * API Endpoint: /weather
+ * Units: Metric (Celsius, meters/sec)
+ * 
+ * @async
+ * @function getCurrentWeather
+ * @param {string} location - City name
+ * @returns {Promise<Object>} Formatted weather data
+ * @throws {Error} If API call fails
+ * 
+ * Response includes:
+ * - location, country: Location details
+ * - temperature, feelsLike: Temperature data in °C
+ * - condition: Main weather condition (Clear, Rain, etc.)
+ * - description: Detailed description (clear sky, light rain, etc.)
+ * - humidity: Humidity percentage
+ * - windSpeed: Wind speed in m/s
+ * - icon: Weather icon code
+ * - timestamp: ISO timestamp of data
  */
 async function getCurrentWeather(location) {
   try {
+    // Call OpenWeatherMap current weather API
     const response = await axios.get(`${WEATHER_API_URL}/weather`, {
       params: {
         q: location,

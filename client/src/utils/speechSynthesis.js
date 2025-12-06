@@ -1,35 +1,82 @@
 /**
- * Speech Synthesis Utility
- * Handles text-to-speech conversion using Web Speech API
+ * Speech Synthesis Service
+ * 
+ * Wrapper for the Web Speech API's SpeechSynthesis interface.
+ * Provides text-to-speech conversion with voice selection,
+ * customizable speech parameters, and promise-based API.
+ * 
+ * Browser Support:
+ * - Chrome (desktop and mobile)
+ * - Edge (Chromium-based)
+ * - Safari (desktop and mobile)
+ * - Firefox (desktop)
+ * 
+ * Features:
+ * - Text-to-speech conversion
+ * - Voice selection (prefers female voices)
+ * - Customizable pitch, rate, and volume
+ * - Promise-based speak() method
+ * - Pause/resume support
+ * - Cancel ongoing speech
+ * - Browser compatibility checking
+ * 
+ * Voice Settings:
+ * - Language: en-US (US English)
+ * - Pitch: 1.0 (normal)
+ * - Rate: 1.0 (normal speed)
+ * - Volume: 1.0 (full volume)
+ * - Preferred Voice: Female US English voices
+ * 
+ * Events:
+ * - onStart: Speech begins
+ * - onEnd: Speech completes
+ * - onError: Speech error occurs
+ * - onPause: Speech paused
+ * - onResume: Speech resumed
+ * 
+ * @class SpeechSynthesisService
  */
 
 class SpeechSynthesisService {
+  /**
+   * Initialize Speech Synthesis
+   * Sets up Web Speech API with default configuration
+   */
   constructor() {
-    // Check browser support
+    // Check browser support for Speech Synthesis
     if (!('speechSynthesis' in window)) {
       console.error('Speech Synthesis not supported in this browser');
       this.supported = false;
       return;
     }
 
+    // Initialize synthesis instance
     this.synth = window.speechSynthesis;
     this.supported = true;
     this.isSpeaking = false;
     this.currentUtterance = null;
 
-    // Voice settings
+    // ========================================
+    // Voice Configuration
+    // ========================================
+
+    // Default voice settings (can be customized)
     this.voiceSettings = {
-      lang: 'en-US',
-      pitch: 1.0,
-      rate: 1.0,
-      volume: 1.0
+      lang: 'en-US',      // US English
+      pitch: 1.0,         // Normal pitch (0.0-2.0)
+      rate: 1.0,          // Normal speed (0.1-10)
+      volume: 1.0         // Full volume (0.0-1.0)
     };
 
-    // Wait for voices to load
+    // ========================================
+    // Voice Loading
+    // ========================================
+
+    // Load available voices from browser
     this.voices = [];
     this.loadVoices();
 
-    // Update voices when they change
+    // Update voices when browser loads them (async in some browsers)
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = () => {
         this.loadVoices();

@@ -1,21 +1,60 @@
+/**
+ * API Service
+ * 
+ * Centralized HTTP client for communicating with the backend API.
+ * Handles all API requests for bookings, weather, and other endpoints.
+ * 
+ * Base URL Configuration:
+ * - Production: Set REACT_APP_API_URL in environment
+ * - Development: Defaults to http://localhost:5000
+ * 
+ * Features:
+ * - Axios-based HTTP client with interceptors
+ * - Request/response logging for debugging
+ * - Error handling and propagation
+ * - Timeout configuration (10 seconds)
+ * - Consistent JSON headers
+ * - Automatic base URL prefixing
+ * 
+ * Endpoints:
+ * - POST /api/bookings - Create new booking
+ * - GET /api/bookings - Get all bookings
+ * - GET /api/bookings/:id - Get booking by ID
+ * - PUT /api/bookings/:id/cancel - Cancel booking
+ * - GET /api/weather - Get weather forecast
+ * 
+ * Error Handling:
+ * - Network errors: Connection issues, timeouts
+ * - HTTP errors: 4xx client errors, 5xx server errors
+ * - All errors are logged and re-thrown for component handling
+ * 
+ * @class ApiService
+ */
+
 import axios from 'axios';
 
+// API base URL (configurable via environment variable)
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-/**
- * API Service for backend communication
- */
 class ApiService {
+  /**
+   * Initialize API Service
+   * Creates axios instance with interceptors for logging
+   */
   constructor() {
+    // Create axios instance with default config
     this.client = axios.create({
       baseURL: API_URL,
-      timeout: 10000,
+      timeout: 10000, // 10 second timeout
       headers: {
         'Content-Type': 'application/json'
       }
     });
 
-    // Request interceptor
+    // ========================================
+    // Request Interceptor
+    // ========================================
+    // Logs all outgoing requests for debugging
     this.client.interceptors.request.use(
       (config) => {
         console.log('API Request:', config.method.toUpperCase(), config.url);
@@ -27,7 +66,10 @@ class ApiService {
       }
     );
 
-    // Response interceptor
+    // ========================================
+    // Response Interceptor
+    // ========================================
+    // Logs all responses and errors for debugging
     this.client.interceptors.response.use(
       (response) => {
         console.log('API Response:', response.status, response.data);

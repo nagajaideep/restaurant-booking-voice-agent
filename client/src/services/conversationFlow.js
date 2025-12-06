@@ -1,8 +1,49 @@
 /**
- * Conversation Flow Manager
- * Manages the booking conversation logic and flow
+ * Conversation Flow Service
+ * 
+ * State machine that manages the restaurant booking conversation flow.
+ * Handles user input processing, validation, and progression through booking steps.
+ * 
+ * Conversation Steps (in order):
+ * 1. GREETING - Welcome message
+ * 2. NAME - Collect customer name
+ * 3. GUESTS - Collect number of guests (1-20)
+ * 4. DATE_TIME - Collect date and time (combined question)
+ * 5. CUISINE - Collect cuisine preference (optional)
+ * 6. SPECIAL_REQUESTS - Collect special requests (optional)
+ * 7. WEATHER_CHECK - Fetch weather data for booking date
+ * 8. SEATING - Indoor/outdoor preference (with weather-based suggestion)
+ * 9. CONFIRMATION - Show summary and confirm booking
+ * 10. COMPLETE - Final thank you message
+ * 
+ * Features:
+ * - Natural language processing for dates and times
+ * - Flexible input handling (various formats)
+ * - Weather API integration
+ * - Intelligent seating suggestions based on weather
+ * - Comprehensive validation and error handling
+ * - Optional fields (cuisine, special requests)
+ * 
+ * Data Structure:
+ * bookingData = {
+ *   customerName: string,
+ *   numberOfGuests: number (1-20),
+ *   bookingDate: string (YYYY-MM-DD),
+ *   bookingTime: string (HH:MM 24-hour),
+ *   cuisinePreference: string (enum),
+ *   specialRequests: string (default: 'None'),
+ *   seatingPreference: string (Indoor/Outdoor/No Preference),
+ *   weatherInfo: object,
+ *   status: string (default: 'confirmed')
+ * }
+ * 
+ * @class ConversationFlowService
  */
 
+/**
+ * Conversation step constants
+ * Defines all possible states in the booking flow
+ */
 const CONVERSATION_STEPS = {
   GREETING: 'greeting',
   NAME: 'name',
@@ -16,9 +57,17 @@ const CONVERSATION_STEPS = {
   COMPLETE: 'complete'
 };
 
+/**
+ * Available cuisine options
+ * Used for validation and prompting
+ */
 const CUISINE_OPTIONS = ['Italian', 'Chinese', 'Indian', 'Mexican', 'Japanese', 'Thai', 'Continental', 'Other'];
 
 class ConversationFlowService {
+  /**
+   * Initialize conversation flow service
+   * Sets up initial state and booking data structure
+   */
   constructor() {
     this.currentStep = CONVERSATION_STEPS.GREETING;
     this.bookingData = {

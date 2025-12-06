@@ -1,7 +1,36 @@
+/**
+ * Booking Model
+ * 
+ * Mongoose schema and model for restaurant table bookings.
+ * Stores all booking information including customer details,
+ * date/time, preferences, and weather data.
+ * 
+ * Schema Design:
+ * - bookingId: Unique auto-generated identifier (BK + timestamp + random)
+ * - customerName: Guest name (required, trimmed)
+ * - numberOfGuests: Party size (1-20, required)
+ * - bookingDate: Reservation date (required)
+ * - bookingTime: Reservation time in 24-hour format (required)
+ * - cuisinePreference: Type of cuisine (enum, required)
+ * - specialRequests: Additional requests (optional, default: 'None')
+ * - weatherInfo: Weather data at booking time (object, optional)
+ * - seatingPreference: Indoor/Outdoor preference (enum)
+ * - status: Booking status (confirmed/pending/cancelled)
+ * - createdAt: Timestamp of booking creation
+ * 
+ * Indexes:
+ * - bookingId: Unique identifier for fast lookups
+ * - bookingDate: For date-based queries
+ * - status: For filtering by booking status
+ * 
+ * @module models/Booking
+ */
+
 const mongoose = require('mongoose');
 
 /**
- * Booking Schema - Matches exact requirements
+ * Booking Schema Definition
+ * Defines the structure and validation rules for booking documents
  */
 const bookingSchema = new mongoose.Schema({
   bookingId: {

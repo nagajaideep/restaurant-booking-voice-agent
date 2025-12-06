@@ -1,11 +1,46 @@
 /**
- * Speech Recognition Utility
- * Handles speech-to-text conversion using Web Speech API
+ * Speech Recognition Service
+ * 
+ * Wrapper for the Web Speech API's SpeechRecognition interface.
+ * Provides speech-to-text conversion with enhanced error handling,
+ * confidence filtering, and automatic retry logic.
+ * 
+ * Browser Support:
+ * - Chrome (desktop and mobile)
+ * - Edge (Chromium-based)
+ * - Safari 14.1+ (limited support)
+ * 
+ * Features:
+ * - Continuous listening mode
+ * - Interim results for real-time feedback
+ * - Multiple alternative transcripts
+ * - Confidence-based filtering (>0.3)
+ * - Silence detection and timeout handling
+ * - Automatic stop after successful recognition
+ * - Comprehensive error handling
+ * 
+ * Configuration:
+ * - Language: en-US
+ * - Continuous: true (keeps listening)
+ * - Interim Results: true (real-time updates)
+ * - Max Alternatives: 5 (provides multiple options)
+ * - Min Confidence: 0.3 (accepts quieter speech)
+ * 
+ * Events:
+ * - onResult(text, confidence): Fired on successful recognition
+ * - onError(errorType): Fired on error (no-speech, network, etc.)
+ * - onEnd(): Fired when recognition stops
+ * 
+ * @class SpeechRecognitionService
  */
 
 class SpeechRecognitionService {
+  /**
+   * Initialize Speech Recognition
+   * Sets up Web Speech API with optimized configuration
+   */
   constructor() {
-    // Check browser support
+    // Check browser support (Chrome, Edge, Safari)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
@@ -14,28 +49,46 @@ class SpeechRecognitionService {
       return;
     }
 
+    // Initialize recognition instance
     this.recognition = new SpeechRecognition();
     this.supported = true;
     this.isListening = false;
 
-    // Configuration
-    this.recognition.continuous = true; // Keep listening
-    this.recognition.interimResults = true; // Enable interim results for better responsiveness
-    this.recognition.lang = 'en-US'; // Language
-    this.recognition.maxAlternatives = 5; // Get more alternatives
+    // ========================================
+    // Configuration Settings
+    // ========================================
 
-    // Make it more sensitive to pick up quieter speech
-    this.minConfidence = 0.3; // Lower threshold to accept quieter speech
+    // Keep listening continuously (don't stop after first input)
+    this.recognition.continuous = true;
 
-    // Timeout settings
+    // Enable interim results for better responsiveness
+    this.recognition.interimResults = true;
+
+    // Set language to US English
+    this.recognition.lang = 'en-US';
+
+    // Get more alternatives for better accuracy
+    this.recognition.maxAlternatives = 5;
+
+    // Lower confidence threshold to accept quieter speech
+    this.minConfidence = 0.3;
+
+    // ========================================
+    // State Management
+    // ========================================
+
+    // Timeout for silence detection
     this.silenceTimeout = null;
+
+    // Track last recognized transcript
     this.lastTranscript = '';
 
-    // Event handlers
+    // Callback functions (set by component)
     this.onResultCallback = null;
     this.onErrorCallback = null;
     this.onEndCallback = null;
 
+    // Setup event listeners
     this.setupEventListeners();
   }
 
