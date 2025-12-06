@@ -1,0 +1,25 @@
+{
+  "name": "restaurant-booking-voice-agent",
+  "version": "1.0.0",
+  "description": "Voice-enabled AI agent for restaurant table booking",
+  "main": "server/src/server.js",
+  "scripts": {
+    "install-server": "cd server && npm install",
+    "install-client": "cd client && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "start-server": "cd server && npm start",
+    "start-client": "cd client && npm start",
+    "dev": "concurrently \"npm run start-server\" \"npm run start-client\""
+  },
+  "keywords": [
+    "voice-agent",
+    "restaurant-booking",
+    "mern-stack",
+    "web-speech-api"
+  ],
+  "author": "Jaideep",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
