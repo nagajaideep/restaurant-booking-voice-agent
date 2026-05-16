@@ -79,6 +79,14 @@ class ConversationFlowService {
       specialRequests: 'None',
       seatingPreference: 'No Preference',
       weatherInfo: {},
+      tableAssignment: null,
+      bookingDurationMinutes: 90,
+      estimatedArrivalTime: '',
+      prepStartTime: '',
+      tableReadyTime: '',
+      bookingEndTime: '',
+      arrivalGuidance: null,
+      availabilitySnapshot: {},
       status: 'confirmed'
     };
     this.weatherSuggestion = null;
@@ -98,6 +106,14 @@ class ConversationFlowService {
       specialRequests: 'None',
       seatingPreference: 'No Preference',
       weatherInfo: {},
+      tableAssignment: null,
+      bookingDurationMinutes: 90,
+      estimatedArrivalTime: '',
+      prepStartTime: '',
+      tableReadyTime: '',
+      bookingEndTime: '',
+      arrivalGuidance: null,
+      availabilitySnapshot: {},
       status: 'confirmed'
     };
     this.weatherSuggestion = null;
@@ -571,6 +587,33 @@ class ConversationFlowService {
     this.currentStep = CONVERSATION_STEPS.WEATHER_CHECK;
   }
 
+  setAvailabilityPlan(availability) {
+    this.bookingData.tableAssignment = availability.tableAssignment;
+    this.bookingData.bookingDurationMinutes = availability.bookingDurationMinutes;
+    this.bookingData.arrivalGuidance = availability.arrivalGuidance;
+    this.bookingData.estimatedArrivalTime = availability.arrivalGuidance?.estimatedArrivalTime || '';
+    this.bookingData.prepStartTime = availability.arrivalGuidance?.prepStartTime || '';
+    this.bookingData.tableReadyTime = availability.arrivalGuidance?.tableReadyTime || '';
+    this.bookingData.bookingEndTime = availability.arrivalGuidance?.bookingEndTime || '';
+    this.bookingData.availabilitySnapshot = {
+      availableTableCount: availability.availableTableCount,
+      blockedTableCount: availability.blockedTableCount,
+      totalTableCount: availability.totalTableCount
+    };
+  }
+
+  requestDifferentDateTime() {
+    this.bookingData.bookingDate = '';
+    this.bookingData.bookingTime = '';
+    this.currentStep = CONVERSATION_STEPS.GUESTS;
+  }
+
+  requestDifferentSeating() {
+    this.bookingData.seatingPreference = 'No Preference';
+    this.bookingData.tableAssignment = null;
+    this.currentStep = CONVERSATION_STEPS.WEATHER_CHECK;
+  }
+
   /**
    * Process seating preference
    */
@@ -628,8 +671,14 @@ class ConversationFlowService {
     const specialRequestText = this.bookingData.specialRequests !== 'None'
       ? `Special requests: ${this.bookingData.specialRequests}.`
       : '';
+    const tableText = this.bookingData.tableAssignment
+      ? `Table ${this.bookingData.tableAssignment.tableId}, ${this.bookingData.tableAssignment.seating.toLowerCase()} seating.`
+      : `${this.bookingData.seatingPreference} seating.`;
+    const arrivalText = this.bookingData.arrivalGuidance?.message
+      ? `${this.bookingData.arrivalGuidance.message}`
+      : '';
 
-    return `Let me confirm your booking: ${this.bookingData.customerName}, table for ${this.bookingData.numberOfGuests} guests on ${date} at ${formattedTime}. ${cuisineText} ${this.bookingData.seatingPreference} seating. ${specialRequestText} Is this correct? Say 'yes' to confirm or 'no' to start over.`;
+    return `Let me confirm your booking: ${this.bookingData.customerName}, table for ${this.bookingData.numberOfGuests} guests on ${date} at ${formattedTime}. ${cuisineText} ${tableText} ${arrivalText} ${specialRequestText} Is this correct? Say 'yes' to confirm or 'no' to start over.`;
   }
 
   /**

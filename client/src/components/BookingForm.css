@@ -40,6 +40,29 @@
   color: #3c3;
 }
 
+.availability-card {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.availability-card.available {
+  background-color: #edf8f3;
+  border: 1px solid #b7e4cf;
+  color: #1f6f4a;
+}
+
+.availability-card.unavailable {
+  background-color: #fff5e8;
+  border: 1px solid #ffd59b;
+  color: #8a4b00;
+}
+
+.availability-card p {
+  margin: 6px 0 0;
+}
+
 .booking-form {
   display: flex;
   flex-direction: column;
@@ -122,4 +145,21 @@
   .booking-form-container {
     padding: 20px;
   }
+}
+
+.btn-secondary {
+  padding: 14px;
+  background: #f8f9fa;
+  color: #2c3e50;
+  border: 2px solid #d9e2ec;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color: #667eea;
+  color: #667eea;
 }

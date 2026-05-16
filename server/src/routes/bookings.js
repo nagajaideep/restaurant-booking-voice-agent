@@ -8,6 +8,12 @@ router.post('/', bookingController.createBooking);
 // GET /api/bookings - Get all bookings
 router.get('/', bookingController.getAllBookings);
 
+// GET /api/bookings/availability - Check table availability
+router.get('/availability', bookingController.checkAvailability);
+
+// GET /api/bookings/tables - Get restaurant table inventory
+router.get('/tables', bookingController.getRestaurantTables);
+
 // GET /api/bookings/:id - Get specific booking
 router.get('/:id', bookingController.getBookingById);
 

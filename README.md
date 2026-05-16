@@ -6,6 +6,9 @@ An intelligent voice-enabled AI agent that helps users book restaurant tables th
 
 - **Voice Interaction**: Natural speech-to-text and text-to-speech conversation
 - **Smart Booking**: Collects guest count, date/time, cuisine preference, and special requests via voice
+- **Availability Checks**: Checks table capacity before confirmation and suggests nearby available slots
+- **Table Assignment**: Assigns the best-fit indoor/outdoor table based on party size and seating preference
+- **Arrival Guidance**: Estimates when the customer should arrive, when staff should start preparing, and when the table is ready
 - **Weather Integration**: Real-time weather forecast for booking date with seating suggestions
 - **Database Storage**: MongoDB for persistent booking management
 - **RESTful API**: Complete CRUD operations for bookings
@@ -96,8 +99,9 @@ Frontend runs on: `http://localhost:3000`
    - Provide booking date and time
    - Choose cuisine preference
    - Mention any special requests
-4. **Weather Check**: Agent fetches weather and suggests seating
-5. **Confirm Booking**: Review details and confirm
+4. **Availability Check**: Agent checks table capacity and estimates arrival/prep timing
+5. **Weather Check**: Agent fetches weather and suggests seating
+6. **Confirm Booking**: Review table assignment, timing guidance, and reservation details
 
 ### Voice Commands Examples:
 - "I want to book a table"
@@ -112,6 +116,8 @@ Frontend runs on: `http://localhost:3000`
 |--------|----------|-------------|
 | POST | `/api/bookings` | Create new booking |
 | GET | `/api/bookings` | Get all bookings |
+| GET | `/api/bookings/availability` | Check table availability for date/time/party size |
+| GET | `/api/bookings/tables` | Get configured restaurant table inventory |
 | GET | `/api/bookings/:id` | Get specific booking |
 | DELETE | `/api/bookings/:id` | Cancel booking |
 | GET | `/api/weather` | Get weather forecast |
@@ -129,6 +135,13 @@ Frontend runs on: `http://localhost:3000`
   specialRequests: String,
   weatherInfo: Object,
   seatingPreference: String,
+  tableAssignment: Object,
+  bookingDurationMinutes: Number,
+  estimatedArrivalTime: String,
+  prepStartTime: String,
+  tableReadyTime: String,
+  bookingEndTime: String,
+  arrivalGuidance: Object,
   status: String,
   createdAt: Date
 }
@@ -192,7 +205,7 @@ Check the `demo/` folder for a screen recording demonstrating the complete booki
 - [ ] SMS/Email confirmations
 - [ ] Calendar integration
 - [ ] Admin dashboard with analytics
-- [ ] Restaurant availability checking
+- [x] Restaurant availability checking
 
 ## 👨‍💻 Developer
 

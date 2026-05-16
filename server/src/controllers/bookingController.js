@@ -1,4 +1,26 @@
 const Booking = require('../models/Booking');
+const {
+  RESTAURANT_TABLES,
+  checkAvailability,
+  toDateKey
+} = require('../services/tableManagementService');
+
+const getBookingsForDate = async (bookingDate) => {
+  const dateKey = toDateKey(bookingDate);
+  if (!dateKey) {
+    return [];
+  }
+
+  const searchDate = new Date(`${dateKey}T00:00:00`);
+
+  return Booking.find({
+    status: { $ne: 'cancelled' },
+    bookingDate: {
+      $gte: new Date(searchDate.setHours(0, 0, 0, 0)),
+      $lt: new Date(searchDate.setHours(23, 59, 59, 999))
+    }
+  });
+};
 
 /**
  * Create New Booking
@@ -31,9 +53,47 @@ const Booking = require('../models/Booking');
 exports.createBooking = async (req, res, next) => {
   try {
     const bookingData = req.body;
+    const existingBookings = await getBookingsForDate(bookingData.bookingDate);
+    const availability = checkAvailability({
+      bookingDate: bookingData.bookingDate,
+      bookingTime: bookingData.bookingTime,
+      numberOfGuests: Number(bookingData.numberOfGuests),
+      seatingPreference: bookingData.seatingPreference,
+      existingBookings
+    });
+
+    if (!availability.available) {
+      return res.status(409).json({
+        success: false,
+        message: availability.reason,
+        data: availability
+      });
+    }
+
+    const enrichedBookingData = {
+      ...bookingData,
+      bookingDate: availability.bookingDate,
+      numberOfGuests: Number(bookingData.numberOfGuests),
+      cuisinePreference: bookingData.cuisinePreference || 'No Preference',
+      specialRequests: bookingData.specialRequests || 'None',
+      seatingPreference: availability.tableAssignment.seating,
+      tableAssignment: availability.tableAssignment,
+      bookingDurationMinutes: availability.bookingDurationMinutes,
+      estimatedArrivalTime: availability.arrivalGuidance.estimatedArrivalTime,
+      prepStartTime: availability.arrivalGuidance.prepStartTime,
+      tableReadyTime: availability.arrivalGuidance.tableReadyTime,
+      bookingEndTime: availability.arrivalGuidance.bookingEndTime,
+      arrivalGuidance: availability.arrivalGuidance,
+      availabilitySnapshot: {
+        availableTableCount: availability.availableTableCount,
+        blockedTableCount: availability.blockedTableCount,
+        totalTableCount: availability.totalTableCount,
+        checkedAt: new Date().toISOString()
+      }
+    };
 
     // Create booking document in MongoDB
-    const booking = await Booking.create(bookingData);
+    const booking = await Booking.create(enrichedBookingData);
 
     res.status(201).json({
       success: true,
@@ -53,6 +113,35 @@ exports.createBooking = async (req, res, next) => {
 
     next(error);
   }
+};
+
+exports.checkAvailability = async (req, res, next) => {
+  try {
+    const { date, time, guests, seatingPreference } = req.query;
+    const existingBookings = await getBookingsForDate(date);
+    const availability = checkAvailability({
+      bookingDate: date,
+      bookingTime: time,
+      numberOfGuests: Number(guests),
+      seatingPreference,
+      existingBookings
+    });
+
+    res.status(200).json({
+      success: true,
+      data: availability
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getRestaurantTables = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    count: RESTAURANT_TABLES.length,
+    data: RESTAURANT_TABLES
+  });
 };
 
 /**

@@ -157,6 +157,36 @@ const BookingList = () => {
                     <span>{booking.seatingPreference}</span>
                   </div>
 
+                  {booking.tableAssignment?.tableId && (
+                    <div className="detail-row table-info">
+                      <span className="detail-icon">T</span>
+                      <span>
+                        Table {booking.tableAssignment.tableId} ({booking.tableAssignment.seating}, seats {booking.tableAssignment.capacity})
+                      </span>
+                    </div>
+                  )}
+
+                  {booking.estimatedArrivalTime && (
+                    <div className="detail-row arrival-info">
+                      <span className="detail-icon">A</span>
+                      <span>Customer arrival: {booking.estimatedArrivalTime}</span>
+                    </div>
+                  )}
+
+                  {booking.prepStartTime && (
+                    <div className="detail-row prep-info">
+                      <span className="detail-icon">P</span>
+                      <span>Prep starts: {booking.prepStartTime}</span>
+                    </div>
+                  )}
+
+                  {booking.bookingEndTime && (
+                    <div className="detail-row">
+                      <span className="detail-icon">E</span>
+                      <span>Reserved until: {booking.bookingEndTime}</span>
+                    </div>
+                  )}
+
                   {booking.specialRequests && booking.specialRequests !== 'None' && (
                     <div className="detail-row special-requests">
                       <span className="detail-icon">✨</span>

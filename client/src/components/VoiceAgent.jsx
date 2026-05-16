@@ -39,7 +39,7 @@ import ConversationFlowService from '../services/conversationFlow';
 import apiService from '../services/apiService';
 import './VoiceAgent.css';
 
-const VoiceAgent = () => {
+const VoiceAgent = ({ onBookingCreated }) => {
   const [isActive, setIsActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -327,6 +327,18 @@ const VoiceAgent = () => {
     }
 
     // Check if we need to fetch weather
+    if (conversationFlowRef.current.getCurrentStep() === 'date_time') {
+      await handleAvailabilityCheck();
+      return;
+    }
+
+    // Re-check availability after the guest picks indoor/outdoor seating.
+    if (conversationFlowRef.current.getCurrentStep() === 'seating') {
+      await handleSeatingAvailabilityCheck();
+      return;
+    }
+
+    // Check if we need to fetch weather
     if (conversationFlowRef.current.getCurrentStep() === 'special_requests') {
       await handleWeatherCheck();
       return;
@@ -359,6 +371,98 @@ const VoiceAgent = () => {
       startListening();
     } else {
       setIsActive(false);
+    }
+  };
+
+  const formatAlternatives = (alternativeSlots = []) => {
+    if (!alternativeSlots.length) {
+      return 'Please try another time or seating preference.';
+    }
+
+    const options = alternativeSlots.map(slot => slot.displayTime).join(', ');
+    return `Nearby available times are ${options}.`;
+  };
+
+  const checkCurrentAvailability = async (seatingPreferenceOverride) => {
+    const bookingData = conversationFlowRef.current.getBookingData();
+
+    const response = await apiService.checkAvailability({
+      date: bookingData.bookingDate,
+      time: bookingData.bookingTime,
+      guests: bookingData.numberOfGuests,
+      seatingPreference: seatingPreferenceOverride || bookingData.seatingPreference || 'No Preference'
+    });
+
+    return response.data;
+  };
+
+  const handleAvailabilityCheck = async () => {
+    const checkingMsg = 'Let me check table availability for that date and time.';
+    addMessage('agent', checkingMsg);
+    await speak(checkingMsg);
+
+    try {
+      const availability = await checkCurrentAvailability('No Preference');
+
+      if (!availability.available) {
+        conversationFlowRef.current.requestDifferentDateTime();
+        const unavailableMsg = `I do not have a suitable table at that time. ${formatAlternatives(availability.alternativeSlots)} What date and time should I check instead?`;
+        addMessage('agent', unavailableMsg);
+        await speak(unavailableMsg);
+        startListening();
+        return;
+      }
+
+      conversationFlowRef.current.setAvailabilityPlan(availability);
+      const availableMsg = `${availability.reason} ${availability.arrivalGuidance.message}`;
+      addMessage('agent', availableMsg);
+      await speak(availableMsg);
+
+      const nextPrompt = conversationFlowRef.current.getPrompt();
+      addMessage('agent', nextPrompt);
+      await speak(nextPrompt);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      startListening();
+    } catch (error) {
+      const fallbackMsg = 'I could not reach the availability service, but I can keep collecting the reservation details and verify at confirmation.';
+      addMessage('agent', fallbackMsg);
+      await speak(fallbackMsg);
+
+      const nextPrompt = conversationFlowRef.current.getPrompt();
+      addMessage('agent', nextPrompt);
+      await speak(nextPrompt);
+      startListening();
+    }
+  };
+
+  const handleSeatingAvailabilityCheck = async () => {
+    try {
+      const availability = await checkCurrentAvailability();
+
+      if (!availability.available) {
+        conversationFlowRef.current.requestDifferentSeating();
+        const unavailableMsg = `That seating area is full for your time. ${formatAlternatives(availability.alternativeSlots)} Would you prefer indoor, outdoor, or no preference?`;
+        addMessage('agent', unavailableMsg);
+        await speak(unavailableMsg);
+        startListening();
+        return;
+      }
+
+      conversationFlowRef.current.setAvailabilityPlan(availability);
+      const tableMsg = `Good news, ${availability.tableAssignment.seating.toLowerCase()} table ${availability.tableAssignment.tableId} is available.`;
+      addMessage('agent', tableMsg);
+      await speak(tableMsg);
+
+      const nextPrompt = conversationFlowRef.current.getPrompt();
+      addMessage('agent', nextPrompt);
+      await speak(nextPrompt);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      startListening();
+    } catch (error) {
+      const nextPrompt = conversationFlowRef.current.getPrompt();
+      addMessage('agent', nextPrompt);
+      await speak(nextPrompt);
+      startListening();
     }
   };
 
@@ -449,9 +553,19 @@ const VoiceAgent = () => {
 
       if (response.success) {
         setBookingConfirmed(true);
-        const confirmationMsg = `Excellent! Your booking has been confirmed. Your booking ID is ${response.data.bookingId}. You'll receive a confirmation shortly. Thank you for choosing our restaurant!`;
+        const arrivalMessage = response.data.arrivalGuidance?.message
+          ? ` ${response.data.arrivalGuidance.message}`
+          : '';
+        const tableMessage = response.data.tableAssignment?.tableId
+          ? ` Table ${response.data.tableAssignment.tableId} is reserved for you.`
+          : '';
+        const confirmationMsg = `Excellent! Your booking has been confirmed. Your booking ID is ${response.data.bookingId}.${tableMessage}${arrivalMessage} Thank you for choosing our restaurant!`;
         addMessage('agent', confirmationMsg);
         await speak(confirmationMsg);
+
+        if (onBookingCreated) {
+          onBookingCreated(response.data);
+        }
 
         conversationFlowRef.current.complete();
 

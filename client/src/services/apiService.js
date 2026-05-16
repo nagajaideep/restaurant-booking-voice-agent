@@ -94,6 +94,17 @@ class ApiService {
     }
   }
 
+  async checkAvailability({ date, time, guests, seatingPreference = 'No Preference' }) {
+    try {
+      const response = await this.client.get('/api/bookings/availability', {
+        params: { date, time, guests, seatingPreference }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   /**
    * Get all bookings
    */

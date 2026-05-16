@@ -197,6 +197,15 @@
   font-size: 0.9rem;
 }
 
+.table-info,
+.arrival-info,
+.prep-info {
+  background-color: #f4f7fb;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
 .booking-actions {
   margin-top: 15px;
   padding-top: 15px;

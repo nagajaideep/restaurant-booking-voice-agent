@@ -61,7 +61,7 @@ const bookingSchema = new mongoose.Schema({
   cuisinePreference: {
     type: String,
     required: [true, 'Cuisine preference is required'],
-    enum: ['Italian', 'Chinese', 'Indian', 'Mexican', 'Japanese', 'Thai', 'Continental', 'Other']
+    enum: ['Italian', 'Chinese', 'Indian', 'Mexican', 'Japanese', 'Thai', 'Continental', 'Other', 'No Preference']
   },
   specialRequests: {
     type: String,
@@ -75,6 +75,39 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: ['Indoor', 'Outdoor', 'No Preference'],
     default: 'No Preference'
+  },
+  tableAssignment: {
+    tableId: String,
+    seating: String,
+    capacity: Number
+  },
+  bookingDurationMinutes: {
+    type: Number,
+    default: 90
+  },
+  estimatedArrivalTime: {
+    type: String,
+    default: ''
+  },
+  prepStartTime: {
+    type: String,
+    default: ''
+  },
+  tableReadyTime: {
+    type: String,
+    default: ''
+  },
+  bookingEndTime: {
+    type: String,
+    default: ''
+  },
+  arrivalGuidance: {
+    type: Object,
+    default: {}
+  },
+  availabilitySnapshot: {
+    type: Object,
+    default: {}
   },
   status: {
     type: String,

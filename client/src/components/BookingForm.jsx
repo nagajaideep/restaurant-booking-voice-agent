@@ -14,6 +14,8 @@ const BookingForm = ({ onBookingCreated }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availability, setAvailability] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -26,6 +28,42 @@ const BookingForm = ({ onBookingCreated }) => {
       ...prev,
       [name]: value
     }));
+    setAvailability(null);
+  };
+
+  const formatAlternatives = (alternativeSlots = []) => {
+    if (!alternativeSlots.length) {
+      return 'No nearby alternatives were found. Try another date, time, or seating preference.';
+    }
+
+    return `Nearby available times: ${alternativeSlots.map(slot => slot.displayTime).join(', ')}.`;
+  };
+
+  const handleCheckAvailability = async () => {
+    if (!formData.bookingDate || !formData.bookingTime || !formData.numberOfGuests) {
+      setError('Please choose a date, time, and guest count first.');
+      return null;
+    }
+
+    setCheckingAvailability(true);
+    setError('');
+
+    try {
+      const response = await apiService.checkAvailability({
+        date: formData.bookingDate,
+        time: formData.bookingTime,
+        guests: parseInt(formData.numberOfGuests),
+        seatingPreference: formData.seatingPreference
+      });
+
+      setAvailability(response.data);
+      return response.data;
+    } catch (err) {
+      setError(err.message || 'Failed to check availability');
+      return null;
+    } finally {
+      setCheckingAvailability(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -35,12 +73,16 @@ const BookingForm = ({ onBookingCreated }) => {
     setSuccess('');
 
     try {
-      // Combine date and time
-      const bookingDateTime = new Date(`${formData.bookingDate}T${formData.bookingTime}`);
+      const availabilityResult = availability || await handleCheckAvailability();
+
+      if (!availabilityResult?.available) {
+        setError(`No suitable table is available. ${formatAlternatives(availabilityResult?.alternativeSlots)}`);
+        return;
+      }
 
       const bookingData = {
         ...formData,
-        bookingDate: bookingDateTime.toISOString(),
+        bookingDate: formData.bookingDate,
         numberOfGuests: parseInt(formData.numberOfGuests),
         weatherInfo: {},
         status: 'confirmed'
@@ -49,7 +91,13 @@ const BookingForm = ({ onBookingCreated }) => {
       const response = await apiService.createBooking(bookingData);
 
       if (response.success) {
-        setSuccess(`Booking created successfully! Booking ID: ${response.data.bookingId}`);
+        const guidance = response.data.arrivalGuidance?.message
+          ? ` ${response.data.arrivalGuidance.message}`
+          : '';
+        const table = response.data.tableAssignment?.tableId
+          ? ` Table ${response.data.tableAssignment.tableId} assigned.`
+          : '';
+        setSuccess(`Booking created successfully! Booking ID: ${response.data.bookingId}.${table}${guidance}`);
 
         // Reset form
         setFormData({
@@ -61,6 +109,7 @@ const BookingForm = ({ onBookingCreated }) => {
           specialRequests: '',
           seatingPreference: 'No Preference'
         });
+        setAvailability(null);
 
         if (onBookingCreated) {
           onBookingCreated(response.data);
@@ -80,6 +129,23 @@ const BookingForm = ({ onBookingCreated }) => {
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
+      {availability && (
+        <div className={`availability-card ${availability.available ? 'available' : 'unavailable'}`}>
+          <strong>{availability.available ? 'Table available' : 'Table unavailable'}</strong>
+          <p>{availability.reason}</p>
+          {availability.tableAssignment && (
+            <p>
+              Assigned table: {availability.tableAssignment.tableId} ({availability.tableAssignment.seating}, seats {availability.tableAssignment.capacity})
+            </p>
+          )}
+          {availability.arrivalGuidance && (
+            <p>{availability.arrivalGuidance.message}</p>
+          )}
+          {!availability.available && (
+            <p>{formatAlternatives(availability.alternativeSlots)}</p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="booking-form">
         <div className="form-group">
@@ -179,7 +245,16 @@ const BookingForm = ({ onBookingCreated }) => {
           />
         </div>
 
-        <button type="submit" className="btn btn-submit" disabled={loading}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleCheckAvailability}
+          disabled={checkingAvailability || loading}
+        >
+          {checkingAvailability ? 'Checking...' : 'Check Availability'}
+        </button>
+
+        <button type="submit" className="btn btn-submit" disabled={loading || checkingAvailability}>
           {loading ? 'Creating Booking...' : 'Create Booking'}
         </button>
       </form>
