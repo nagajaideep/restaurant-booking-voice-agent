@@ -1,167 +1,102 @@
-# Restaurant Booking Voice Agent 🎙️🍽️
+# Restaurant Booking Voice Agent
 
-An intelligent frontend-only voice agent that helps users book restaurant tables through natural conversation. Built with React, the Web Speech API, and browser local storage.
+A frontend-only restaurant reservation demo where customers can book a table through a voice-guided flow or a manual form. The app checks table availability, assigns a best-fit table, estimates arrival/prep timing, and stores demo bookings in the browser.
 
-## 🎯 Features
+## Features
 
-- **Voice Interaction**: Natural speech-to-text and text-to-speech conversation
-- **Smart Booking**: Collects guest count, date/time, cuisine preference, and special requests via voice
-- **Availability Checks**: Checks table capacity before confirmation and suggests nearby available slots
-- **Table Assignment**: Assigns the best-fit indoor/outdoor table based on party size and seating preference
-- **Arrival Guidance**: Estimates when the customer should arrive, when staff should start preparing, and when the table is ready
-- **Demo Weather Guidance**: Local demo forecast for seating suggestions without API keys
-- **Browser Storage**: Bookings persist in `localStorage` without MongoDB or a backend server
-- **Frontend-Only Demo**: Runs locally with just the React app
+- Voice-based booking flow using the Web Speech API
+- Manual booking form for typed reservations
+- Local table availability checks
+- Indoor/outdoor table assignment
+- Arrival time, prep start time, ready time, and booking end estimates
+- Demo weather guidance for seating suggestions
+- Booking list with cancellation support
+- Browser-only persistence with `localStorage`
+- No backend, no MongoDB, no API keys, and no environment variables
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-### Frontend
-- React.js
-- Web Speech API (SpeechRecognition & SpeechSynthesis)
-- Browser localStorage for booking persistence
-- CSS3 for styling
+- React
+- Web Speech API
+- Browser `localStorage`
+- CSS
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 restaurant-booking-voice-agent/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # API and voice services
-│   │   └── utils/         # Speech utilities
-├── server/                 # Node.js backend
-│   ├── src/
-│   │   ├── config/        # Database configuration
-│   │   ├── models/        # Mongoose models
-│   │   ├── routes/        # API routes
-│   │   ├── controllers/   # Business logic
-│   │   └── services/      # External services
-└── docs/                   # Documentation
+  client/
+    public/
+    src/
+      components/
+      services/
+      utils/
+  netlify.toml
+  package.json
+  README.md
 ```
 
-## 🚀 Setup Instructions
+## Local Setup
 
-### Prerequisites
-- Node.js (v14 or higher)
+Install dependencies:
 
-### 1. Clone Repository
-```bash
-git clone <your-repo-url>
-cd restaurant-booking-voice-agent
-```
-
-### 2. Frontend Setup
 ```bash
 cd client
 npm install
-npm start
 ```
 
-Frontend runs on: `http://localhost:3000`
+Start the app:
 
-You can also start it from the repository root:
 ```bash
 npm start
 ```
 
-## 🎤 How to Use
+The app runs at:
 
-1. **Allow Microphone Access**: Browser will prompt for microphone permission
-2. **Click "Start Conversation"**: Begin voice interaction
-3. **Follow the Voice Prompts**:
-   - Say number of guests
-   - Provide booking date and time
-   - Choose cuisine preference
-   - Mention any special requests
-4. **Availability Check**: Agent checks table capacity and estimates arrival/prep timing
-5. **Weather Check**: Agent fetches weather and suggests seating
-6. **Confirm Booking**: Review table assignment, timing guidance, and reservation details
-
-### Voice Commands Examples:
-- "I want to book a table"
-- "Table for 4 people"
-- "Tomorrow at 7 PM"
-- "Italian cuisine"
-- "It's a birthday celebration"
-
-## 📡 API Endpoints
-
-This version does not require API endpoints. The frontend uses a local service wrapper that saves bookings, checks availability, cancels reservations, and generates demo weather guidance inside the browser.
-
-## 🗄️ Database Schema
-
-```javascript
-{
-  bookingId: String,
-  customerName: String,
-  numberOfGuests: Number,
-  bookingDate: Date,
-  bookingTime: String,
-  cuisinePreference: String,
-  specialRequests: String,
-  weatherInfo: Object,
-  seatingPreference: String,
-  tableAssignment: Object,
-  bookingDurationMinutes: Number,
-  estimatedArrivalTime: String,
-  prepStartTime: String,
-  tableReadyTime: String,
-  bookingEndTime: String,
-  arrivalGuidance: Object,
-  status: String,
-  createdAt: Date
-}
+```text
+http://localhost:3000
 ```
 
-## 🌤️ Weather Integration
+You can also start from the repository root:
 
-The agent uses a local demo forecast to suggest indoor or outdoor seating. This keeps the project free to run without OpenWeatherMap credentials.
+```bash
+npm start
+```
 
-## 🔧 Environment Variables
+## Netlify Deployment
 
-No environment variables are required for the frontend-only demo.
+This repo includes `netlify.toml`, so Netlify can detect the correct build settings.
 
-## 🎥 Demo Video
+Build settings:
 
-Check the `demo/` folder for a screen recording demonstrating the complete booking flow.
+```text
+Base directory: client
+Build command: npm run build
+Publish directory: client/build
+```
 
-## 🐛 Troubleshooting
+No environment variables are required.
 
-### Microphone Not Working
-- Ensure browser has microphone permissions
-- Use HTTPS in production (required for Web Speech API)
-- Test in Chrome/Edge (best browser support)
+## How To Use
 
-### Booking Data Not Showing
-- Bookings are saved in the current browser only
-- Check that browser storage is enabled
-- Clearing site data will remove saved demo bookings
+1. Open the app in Chrome or Edge.
+2. Use the Voice Agent tab and allow microphone access, or use the Manual Form tab.
+3. Enter guest count, date, time, cuisine preference, seating preference, and requests.
+4. The app checks local table availability and suggests timing.
+5. Confirm the reservation.
+6. View or cancel bookings in the All Bookings tab.
 
-## 📝 Code Quality
+## Data Storage
 
-- Clean, commented code
-- Separation of concerns
-- Error handling implemented
-- Frontend-only local service design
-- Responsive UI
+Bookings are saved in the current browser using `localStorage`. This is ideal for a recruiter demo because it requires no backend setup. Data will remain in that browser until site data is cleared.
 
-## 🚀 Future Enhancements
+## Notes
 
-- [ ] Multi-language support (Hindi + English)
-- [ ] SMS/Email confirmations
-- [ ] Calendar integration
-- [ ] Admin dashboard with analytics
-- [x] Restaurant availability checking
+- Voice recognition works best in Chrome or Edge.
+- Microphone access may require HTTPS in deployed environments.
+- The weather result is demo guidance generated locally, not a live weather API.
+- Because this is frontend-only, bookings are not shared across different browsers or devices.
 
-## 👨‍💻 Developer
+## License
 
-Created for Vaiu AI Software Developer Internship Assignment
-
-## 📄 License
-
-MIT License - feel free to use for learning purposes
-
----
-
-**Note**: This project uses browser's built-in Web Speech API. For production, consider using more robust solutions like Google Cloud Speech-to-Text or OpenAI Whisper.
+MIT

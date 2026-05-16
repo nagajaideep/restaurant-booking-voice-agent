@@ -4,10 +4,9 @@
   "description": "Frontend-only voice-enabled AI agent for restaurant table booking",
   "main": "client/src/index.js",
   "scripts": {
-    "install-server": "cd server && npm install",
     "install-client": "cd client && npm install",
     "install-all": "npm run install-client",
-    "start-server": "cd server && npm start",
+    "build": "cd client && npm run build",
     "start-client": "cd client && npm start",
     "start": "cd client && npm start",
     "dev": "npm run start-client"
@@ -19,8 +18,5 @@
     "web-speech-api"
   ],
   "author": "Jaideep",
-  "license": "MIT",
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+  "license": "MIT"
 }

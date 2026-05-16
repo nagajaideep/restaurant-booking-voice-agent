@@ -124,6 +124,8 @@ const VoiceAgent = ({ onBookingCreated }) => {
         synthesisRef.current.cancel();
       }
     };
+    // Speech service listeners should be registered once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
