@@ -1,6 +1,6 @@
 # Restaurant Booking Voice Agent 🎙️🍽️
 
-An intelligent voice-enabled AI agent that helps users book restaurant tables through natural conversation. Built with MERN stack and Web Speech API.
+An intelligent frontend-only voice agent that helps users book restaurant tables through natural conversation. Built with React, the Web Speech API, and browser local storage.
 
 ## 🎯 Features
 
@@ -9,22 +9,16 @@ An intelligent voice-enabled AI agent that helps users book restaurant tables th
 - **Availability Checks**: Checks table capacity before confirmation and suggests nearby available slots
 - **Table Assignment**: Assigns the best-fit indoor/outdoor table based on party size and seating preference
 - **Arrival Guidance**: Estimates when the customer should arrive, when staff should start preparing, and when the table is ready
-- **Weather Integration**: Real-time weather forecast for booking date with seating suggestions
-- **Database Storage**: MongoDB for persistent booking management
-- **RESTful API**: Complete CRUD operations for bookings
+- **Demo Weather Guidance**: Local demo forecast for seating suggestions without API keys
+- **Browser Storage**: Bookings persist in `localStorage` without MongoDB or a backend server
+- **Frontend-Only Demo**: Runs locally with just the React app
 
 ## 🛠️ Tech Stack
-
-### Backend
-- Node.js & Express.js
-- MongoDB & Mongoose
-- OpenWeatherMap API
-- CORS, dotenv
 
 ### Frontend
 - React.js
 - Web Speech API (SpeechRecognition & SpeechSynthesis)
-- Axios for API calls
+- Browser localStorage for booking persistence
 - CSS3 for styling
 
 ## 📁 Project Structure
@@ -50,8 +44,6 @@ restaurant-booking-voice-agent/
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- MongoDB Atlas account
-- OpenWeatherMap API key
 
 ### 1. Clone Repository
 ```bash
@@ -59,29 +51,7 @@ git clone <your-repo-url>
 cd restaurant-booking-voice-agent
 ```
 
-### 2. Backend Setup
-```bash
-cd server
-npm install
-```
-
-Create `.env` file in server directory:
-```env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-WEATHER_API_KEY=your_openweathermap_api_key
-DEFAULT_LOCATION=Hyderabad
-CLIENT_URL=http://localhost:3000
-```
-
-Start backend server:
-```bash
-npm start
-```
-
-Backend runs on: `http://localhost:5000`
-
-### 3. Frontend Setup
+### 2. Frontend Setup
 ```bash
 cd client
 npm install
@@ -89,6 +59,11 @@ npm start
 ```
 
 Frontend runs on: `http://localhost:3000`
+
+You can also start it from the repository root:
+```bash
+npm start
+```
 
 ## 🎤 How to Use
 
@@ -112,15 +87,7 @@ Frontend runs on: `http://localhost:3000`
 
 ## 📡 API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/bookings` | Create new booking |
-| GET | `/api/bookings` | Get all bookings |
-| GET | `/api/bookings/availability` | Check table availability for date/time/party size |
-| GET | `/api/bookings/tables` | Get configured restaurant table inventory |
-| GET | `/api/bookings/:id` | Get specific booking |
-| DELETE | `/api/bookings/:id` | Cancel booking |
-| GET | `/api/weather` | Get weather forecast |
+This version does not require API endpoints. The frontend uses a local service wrapper that saves bookings, checks availability, cancels reservations, and generates demo weather guidance inside the browser.
 
 ## 🗄️ Database Schema
 
@@ -149,26 +116,11 @@ Frontend runs on: `http://localhost:3000`
 
 ## 🌤️ Weather Integration
 
-The agent fetches real-time weather data from OpenWeatherMap API and intelligently suggests seating:
-- **Sunny/Clear**: Suggests outdoor seating
-- **Rainy/Cloudy**: Recommends indoor seating
-- **Temperature-based**: Additional comfort suggestions
+The agent uses a local demo forecast to suggest indoor or outdoor seating. This keeps the project free to run without OpenWeatherMap credentials.
 
 ## 🔧 Environment Variables
 
-### Backend (.env)
-```env
-PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/restaurant-booking
-WEATHER_API_KEY=your_api_key
-DEFAULT_LOCATION=Hyderabad
-CLIENT_URL=http://localhost:3000
-```
-
-### Frontend (.env)
-```env
-REACT_APP_API_URL=http://localhost:5000
-```
+No environment variables are required for the frontend-only demo.
 
 ## 🎥 Demo Video
 
@@ -181,22 +133,17 @@ Check the `demo/` folder for a screen recording demonstrating the complete booki
 - Use HTTPS in production (required for Web Speech API)
 - Test in Chrome/Edge (best browser support)
 
-### MongoDB Connection Error
-- Verify connection string is correct
-- Check IP whitelist in MongoDB Atlas
-- Ensure database user has read/write permissions
-
-### Weather API Not Working
-- Verify API key is valid
-- Check API request limit (60 calls/minute for free tier)
-- Ensure location name is correct
+### Booking Data Not Showing
+- Bookings are saved in the current browser only
+- Check that browser storage is enabled
+- Clearing site data will remove saved demo bookings
 
 ## 📝 Code Quality
 
 - Clean, commented code
 - Separation of concerns
 - Error handling implemented
-- RESTful API design
+- Frontend-only local service design
 - Responsive UI
 
 ## 🚀 Future Enhancements

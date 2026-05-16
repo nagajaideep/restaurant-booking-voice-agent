@@ -27,7 +27,7 @@
  * - SpeechRecognitionService: Browser speech-to-text
  * - SpeechSynthesisService: Browser text-to-speech
  * - ConversationFlowService: Conversation state machine
- * - apiService: Backend API calls
+ * - apiService: Local booking storage and availability calls
  * 
  * @component
  */
@@ -514,7 +514,7 @@ const VoiceAgent = ({ onBookingCreated }) => {
       conversationFlowRef.current.setWeatherSuggestion(weatherData);
 
       // Announce weather results
-      const weatherInfoMsg = `I've checked the weather forecast from OpenWeatherMap API. ${weatherData.seatingSuggestion.message}`;
+      const weatherInfoMsg = `I've checked the demo weather forecast. ${weatherData.seatingSuggestion.message}`;
       addMessage('agent', weatherInfoMsg);
       await speak(weatherInfoMsg);
 

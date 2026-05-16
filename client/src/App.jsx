@@ -65,7 +65,7 @@ function App() {
       <footer className="app-footer">
         <div className="footer-content">
           <p>© 2025 Restaurant Booking Voice Agent</p>
-          <p>Built with MERN Stack + Web Speech API</p>
+          <p>Built with React, Web Speech API, and browser local storage</p>
           <p className="footer-note">
             💡 For best experience, use Chrome or Edge browser with microphone enabled
           </p>
