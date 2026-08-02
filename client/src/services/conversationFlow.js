@@ -51,6 +51,7 @@ const CONVERSATION_STEPS = {
   DATE_TIME: 'date_time',
   CUISINE: 'cuisine',
   SPECIAL_REQUESTS: 'special_requests',
+  LOCATION: 'location',
   WEATHER_CHECK: 'weather_check',
   SEATING: 'seating',
   CONFIRMATION: 'confirmation',
@@ -567,14 +568,12 @@ class ConversationFlowService {
    */
   processSpecialRequests(input) {
     const normalizedInput = input.toLowerCase().trim();
+    this.bookingData.specialRequests =
+      normalizedInput.includes('no') || normalizedInput.includes('none') || normalizedInput.includes('nothing')
+        ? 'None'
+        : input.trim();
 
-    if (normalizedInput.includes('no') || normalizedInput.includes('none') || normalizedInput.includes('nothing')) {
-      this.bookingData.specialRequests = 'None';
-    } else {
-      this.bookingData.specialRequests = input.trim();
-    }
-
-    this.currentStep = CONVERSATION_STEPS.SPECIAL_REQUESTS;
+    this.currentStep = CONVERSATION_STEPS.LOCATION;
     return { success: true, data: this.bookingData.specialRequests };
   }
 

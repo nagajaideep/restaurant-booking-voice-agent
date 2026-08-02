@@ -301,15 +301,27 @@ const mapWeatherCodeToText = (code) => {
   return map[code] || 'Variable conditions';
 };
 
-const getRealWeather = async (date, location = 'Hyderabad') => {
-  const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
+const getRealWeather = async (date, location = 'auto') => {
+  let coordinates;
 
-  const geoResponse = await fetch(geocodeUrl);
-  const geoData = await geoResponse.json();
+  if (location && typeof location === 'object' && 'latitude' in location && 'longitude' in location) {
+    coordinates = location;
+  } else if (location === 'auto' || location === 'browser') {
+    coordinates = await getBrowserCoordinates();
+  } else {
+    const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
+    const geoResponse = await fetch(geocodeUrl);
+    const geoData = await geoResponse.json();
 
-  const result = geoData.results?.[0];
-  if (!result) {
-    throw new Error(`Could not find location: ${location}`);
+    const result = geoData.results?.[0];
+    if (!result) {
+      throw new Error(`Could not find location: ${location}`);
+    }
+
+    coordinates = {
+      latitude: result.latitude,
+      longitude: result.longitude
+    };
   }
 
   const normalizedDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -317,8 +329,8 @@ const getRealWeather = async (date, location = 'Hyderabad') => {
     : new Date(date).toISOString().split('T')[0];
 
   const forecastUrl =
-    `https://api.open-meteo.com/v1/forecast?latitude=${result.latitude}` +
-    `&longitude=${result.longitude}` +
+    `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.latitude}` +
+    `&longitude=${coordinates.longitude}` +
     `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
     `&timezone=auto&start_date=${normalizedDate}&end_date=${normalizedDate}`;
 
@@ -336,14 +348,11 @@ const getRealWeather = async (date, location = 'Hyderabad') => {
 
   return {
     weather: {
-      location,
-      country: result.country_code || 'IN',
+      location: typeof location === 'string' ? location : 'Current location',
       temperature: averageTemp,
       feelsLike: averageTemp + 1,
       condition: description,
       description,
-      humidity: 55,
-      windSpeed: 2.5,
       timestamp: new Date().toISOString(),
       note: 'Real weather from Open-Meteo'
     },
@@ -351,12 +360,38 @@ const getRealWeather = async (date, location = 'Hyderabad') => {
       preference,
       message:
         preference === 'Outdoor'
-          ? `The forecast for ${location} looks pleasant at ${averageTemp}°C with ${description.toLowerCase()}. Outdoor seating is a good choice.`
-          : `The forecast for ${location} shows ${description.toLowerCase()} around ${averageTemp}°C. Indoor seating is the safer choice.`
+          ? `The forecast looks pleasant at ${averageTemp}°C with ${description.toLowerCase()}. Outdoor seating is a good choice.`
+          : `The forecast shows ${description.toLowerCase()} around ${averageTemp}°C. Indoor seating is the safer choice.`
     },
     fetchedFrom: 'Open-Meteo',
     location
   };
+};
+
+const getBrowserCoordinates = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported in this browser.'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  });
 };
 
 class LocalApiService {
@@ -470,13 +505,10 @@ class LocalApiService {
     };
   }
 
-  async getWeather(date, location = 'Hyderabad') {
+  async getWeather(date, location = 'auto') {
     try {
       const weatherData = await getRealWeather(date, location);
-      return {
-        success: true,
-        data: weatherData
-      };
+      return { success: true, data: weatherData };
     } catch (error) {
       console.error('Weather fetch failed:', error);
       return {

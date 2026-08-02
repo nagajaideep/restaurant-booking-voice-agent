@@ -341,7 +341,15 @@ const VoiceAgent = ({ onBookingCreated }) => {
     }
 
     // Check if we need to fetch weather
-    if (conversationFlowRef.current.getCurrentStep() === 'special_requests') {
+    if (conversationFlowRef.current.getCurrentStep() === 'location') {
+      const locationPrompt = "Please tell me the city for the weather check, or say 'use my current location'.";
+      addMessage('agent', locationPrompt);
+      await speak(locationPrompt);
+      startListening();
+      return;
+    }
+
+    if (conversationFlowRef.current.getCurrentStep() === 'weather_check') {
       await handleWeatherCheck();
       return;
     }
@@ -474,56 +482,35 @@ const VoiceAgent = ({ onBookingCreated }) => {
   const handleWeatherCheck = async () => {
     const bookingData = conversationFlowRef.current.getBookingData();
 
-    console.log('🔍 Weather check - Raw booking data:', {
-      bookingDate: bookingData.bookingDate,
-      bookingTime: bookingData.bookingTime
-    });
-
     const bookingDate = new Date(bookingData.bookingDate + 'T00:00:00');
     const formattedDate = bookingDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const bookingTime = bookingData.bookingTime;
 
-    // Format time to 12-hour format with AM/PM
     const [hours, minutes] = bookingTime.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
     const formattedTime = `${displayHour}:${minutes} ${ampm}`;
 
-    console.log('🔍 Formatted for display:', {
-      formattedDate,
-      formattedTime,
-      originalTime: bookingTime
-    });
+    const location = bookingData.location || process.env.REACT_APP_DEFAULT_LOCATION || 'auto';
+    const locationLabel = location === 'auto' ? 'your current location' : location;
 
-    const location = process.env.REACT_APP_DEFAULT_LOCATION || 'Hyderabad';
-
-    const checkingMsg = `Let me check the weather in ${location} for ${formattedDate} at ${formattedTime}, your booking time...`;
+    const checkingMsg = `Let me check the weather in ${locationLabel} for ${formattedDate} at ${formattedTime}, your booking time...`;
     addMessage('agent', checkingMsg);
     await speak(checkingMsg);
 
     try {
-      const bookingData = conversationFlowRef.current.getBookingData();
-      // Use the date string directly if it's already in YYYY-MM-DD format
-      const bookingDate = bookingData.bookingDate.includes('-') ? bookingData.bookingDate : new Date(bookingData.bookingDate).toISOString().split('T')[0];
-      const bookingTime = bookingData.bookingTime;
-      const location = process.env.REACT_APP_DEFAULT_LOCATION || 'Hyderabad';
-
-      const weatherResponse = await apiService.getWeather(bookingDate, location, bookingTime);
+      const weatherResponse = await apiService.getWeather(bookingData.bookingDate, location, bookingTime);
       const weatherData = weatherResponse.data;
 
-      // Set weather in conversation flow
       conversationFlowRef.current.setWeatherSuggestion(weatherData);
 
-      // Announce weather results
-      const weatherInfoMsg = `I've checked the demo weather forecast. ${weatherData.seatingSuggestion.message}`;
+      const weatherInfoMsg = `I've checked the weather forecast. ${weatherData.seatingSuggestion.message}`;
       addMessage('agent', weatherInfoMsg);
       await speak(weatherInfoMsg);
 
-      // Wait before asking seating preference
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Ask for seating preference based on suggestion
       const suggestedSeating = weatherData.seatingSuggestion.preference;
       const seatingPrompt = `Would you like ${suggestedSeating.toLowerCase()} seating? You can say 'yes' for ${suggestedSeating.toLowerCase()}, or choose 'indoor' or 'outdoor' seating.`;
       addMessage('agent', seatingPrompt);
@@ -532,8 +519,7 @@ const VoiceAgent = ({ onBookingCreated }) => {
       startListening();
     } catch (error) {
       console.error('Weather fetch error:', error);
-      const location = process.env.REACT_APP_DEFAULT_LOCATION || 'Hyderabad';
-      const fallbackMsg = `I couldn't fetch the weather forecast for ${location} at the moment, but we can proceed. Would you prefer indoor or outdoor seating?`;
+      const fallbackMsg = `I couldn't fetch the weather forecast for ${locationLabel} at the moment, but we can proceed. Would you prefer indoor or outdoor seating?`;
       addMessage('agent', fallbackMsg);
       await speak(fallbackMsg);
       conversationFlowRef.current.currentStep = 'weather_check';
