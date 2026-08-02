@@ -278,6 +278,87 @@ const getDemoWeather = (date, location) => {
   };
 };
 
+const mapWeatherCodeToText = (code) => {
+  const map = {
+    0: 'Clear sky',
+    1: 'Mainly clear',
+    2: 'Partly cloudy',
+    3: 'Overcast',
+    45: 'Fog',
+    48: 'Depositing rime fog',
+    51: 'Light drizzle',
+    53: 'Moderate drizzle',
+    55: 'Dense drizzle',
+    61: 'Slight rain',
+    63: 'Moderate rain',
+    65: 'Heavy rain',
+    71: 'Slight snow fall',
+    73: 'Moderate snow fall',
+    75: 'Heavy snow fall',
+    95: 'Thunderstorm'
+  };
+
+  return map[code] || 'Variable conditions';
+};
+
+const getRealWeather = async (date, location = 'Hyderabad') => {
+  const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
+
+  const geoResponse = await fetch(geocodeUrl);
+  const geoData = await geoResponse.json();
+
+  const result = geoData.results?.[0];
+  if (!result) {
+    throw new Error(`Could not find location: ${location}`);
+  }
+
+  const normalizedDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? date
+    : new Date(date).toISOString().split('T')[0];
+
+  const forecastUrl =
+    `https://api.open-meteo.com/v1/forecast?latitude=${result.latitude}` +
+    `&longitude=${result.longitude}` +
+    `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
+    `&timezone=auto&start_date=${normalizedDate}&end_date=${normalizedDate}`;
+
+  const forecastResponse = await fetch(forecastUrl);
+  const forecastData = await forecastResponse.json();
+
+  const daily = forecastData.daily;
+  const weatherCode = daily?.weathercode?.[0];
+  const maxTemp = daily?.temperature_2m_max?.[0];
+  const minTemp = daily?.temperature_2m_min?.[0];
+
+  const description = mapWeatherCodeToText(weatherCode);
+  const averageTemp = Math.round((maxTemp + minTemp) / 2);
+  const preference = averageTemp >= 25 ? 'Outdoor' : 'Indoor';
+
+  return {
+    weather: {
+      location,
+      country: result.country_code || 'IN',
+      temperature: averageTemp,
+      feelsLike: averageTemp + 1,
+      condition: description,
+      description,
+      humidity: 55,
+      windSpeed: 2.5,
+      timestamp: new Date().toISOString(),
+      note: 'Real weather from Open-Meteo'
+    },
+    seatingSuggestion: {
+      preference,
+      message:
+        preference === 'Outdoor'
+          ? `The forecast for ${location} looks pleasant at ${averageTemp}°C with ${description.toLowerCase()}. Outdoor seating is a good choice.`
+          : `The forecast for ${location} shows ${description.toLowerCase()} around ${averageTemp}°C. Indoor seating is the safer choice.`
+    },
+    fetchedFrom: 'Open-Meteo',
+    location
+  };
+};
+
 class LocalApiService {
   async createBooking(bookingData) {
     const bookings = readBookings();
@@ -390,10 +471,32 @@ class LocalApiService {
   }
 
   async getWeather(date, location = 'Hyderabad') {
-    return {
-      success: true,
-      data: getDemoWeather(date, location)
-    };
+    try {
+      const weatherData = await getRealWeather(date, location);
+      return {
+        success: true,
+        data: weatherData
+      };
+    } catch (error) {
+      console.error('Weather fetch failed:', error);
+      return {
+        success: false,
+        data: {
+          weather: {
+            location,
+            temperature: 24,
+            condition: 'Fallback',
+            description: 'Using fallback weather data',
+            note: 'Weather API failed'
+          },
+          seatingSuggestion: {
+            preference: 'Indoor',
+            message: 'I could not fetch live weather, so I am using indoor seating as a safe default.'
+          },
+          fetchedFrom: 'Fallback'
+        }
+      };
+    }
   }
 
   async healthCheck() {
